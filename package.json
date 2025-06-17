@@ -1,0 +1,24 @@
+{
+  "name": "augment-os-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --env-file .env dist/index.js",
+    "dev": "tsx --env-file .env --watch src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@augmentos/sdk": "^1.1.13",
+    "dotenv": "^16.4.5",
+    "openai": "^5.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
