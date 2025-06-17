@@ -7,6 +7,7 @@ const openai = new OpenAI();
 const PACKAGE_NAME = process.env.PACKAGE_NAME || "com.example.myfirstaugmentosapp";
 const PORT = parseInt(process.env.PORT || "3000");
 const AUGMENTOS_API_KEY = process.env.AUGMENTOS_API_KEY;
+const MAX_USER_JOKES = parseInt(process.env.MAX_USER_JOKES || "5");
 
 if (!AUGMENTOS_API_KEY) {
     console.error("AUGMENTOS_API_KEY environment variable is required");
@@ -17,8 +18,13 @@ class MyAugmentOSApp extends TpaServer {
 
     private state: 'WAITING' | 'THINKING' | 'JOKE' = 'WAITING';
 
+    private userJokes: Record<string, number> = {};
+
     protected async onSession(session: TpaSession, sessionId: string, userId: string): Promise<void> {
         console.log(`New session: ${sessionId} for user ${userId}`);
+        if (!this.userJokes[userId]) {
+            this.userJokes[userId] = 0;
+        }
 
         setTimeout(() => {
           session.layouts.showTextWall("Dad is ready when you are!");
@@ -29,10 +35,15 @@ class MyAugmentOSApp extends TpaServer {
             session.events.onTranscription(async (data) => {
                 if (data.isFinal && this.state === 'WAITING') {
                     this.state = 'THINKING';
+                    this.userJokes[userId]++;
+                    if (this.userJokes[userId] > MAX_USER_JOKES) {
+                        session.layouts.showTextWall("Dad is tired of telling jokes. Please come back later!");
+                        return;
+                    }
+
                     session.layouts.showTextWall("Dad is thinking...");
 
-
-                    console.log(`Generating joke for session ${sessionId} with input: ${data.text}`);
+                    console.log(`Generating joke #${this.userJokes[userId]} for session ${sessionId} with input: ${data.text}`);
                     const response = await openai.responses.create({
                         model: 'gpt-4.1',
                         instructions: `You are a Dad Joke generator. You will receive a piece of the user's ocnversation. You must respond with a relevant Dad Joke. It must be a short joke, no more than 20 words. Do not include any additional text or explanations.`,
