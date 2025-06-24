@@ -15,9 +15,6 @@ if (!AUGMENTOS_API_KEY) {
 }
 
 class MyAugmentOSApp extends TpaServer {
-
-    private state: 'WAITING' | 'THINKING' | 'JOKE' = 'WAITING';
-
     private userJokes: Record<string, number> = {};
 
     protected async onSession(session: TpaSession, sessionId: string, userId: string): Promise<void> {
@@ -26,15 +23,16 @@ class MyAugmentOSApp extends TpaServer {
             this.userJokes[userId] = 0;
         }
 
+        let state: 'WAITING' | 'THINKING' | 'JOKE' = 'WAITING';
+
         setTimeout(() => {
           session.layouts.showTextWall("Dad is ready when you are!");
         }, 5000);
 
-
         const eventHandlers = [
             session.events.onTranscription(async (data) => {
-                if (data.isFinal && this.state === 'WAITING') {
-                    this.state = 'THINKING';
+                if (data.isFinal && state === 'WAITING') {
+                    state = 'THINKING';
                     this.userJokes[userId]++;
                     if (this.userJokes[userId] > MAX_USER_JOKES) {
                         session.layouts.showTextWall("Dad is tired of telling jokes. Please come back later!");
@@ -53,11 +51,11 @@ class MyAugmentOSApp extends TpaServer {
                     const joke = response.output_text;
                     console.log(`Generated joke for session ${sessionId}: ${joke}`);
 
-                    this.state = 'JOKE';
+                    state = 'JOKE';
                     session.layouts.showTextWall(joke);
 
                     setTimeout(() => {
-                        this.state = 'WAITING';
+                        state = 'WAITING';
                         session.layouts.showTextWall("Dad is ready when you are!");
                     }, 10000);
                 } 
